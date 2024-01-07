@@ -6,7 +6,7 @@ Description: >
   The project is aimed to scrape car data from https://auto.am/.
 
 Parameters:
-  AUTOAM_IP_ADDRESS:
+  AutoAMAddress:
     Type: String
 
 Globals:
@@ -79,7 +79,7 @@ Resources:
             Resource: "*"
       Environment:
         Variables:
-          AUTOAM_IP_ADDRESS: !Ref AUTOAM_IP_ADDRESS
+          AUTOAM_IP_ADDRESS: !Ref AutoAMAddress
       Layers:
       - !Ref ScrapperLayer
 
@@ -93,7 +93,7 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          AUTOAM_IP_ADDRESS: !Ref AUTOAM_IP_ADDRESS
+          AUTOAM_IP_ADDRESS: !Ref AutoAMAddress
       Layers:
       - !Ref ScrapperLayer
 
@@ -108,7 +108,7 @@ Resources:
       Environment:
         Variables:
           SQS_QUEUE_URL: !Ref ScrappedURLsQueue
-          AUTOAM_IP_ADDRESS: !Ref AUTOAM_IP_ADDRESS
+          AUTOAM_IP_ADDRESS: !Ref AutoAMAddress
       Policies:
       - AWSLambdaBasicExecutionRole
       - Statement:
