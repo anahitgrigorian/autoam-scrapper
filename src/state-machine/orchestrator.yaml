@@ -4,6 +4,7 @@ States:
   CheckPagesScrapped:
     Type: Task
     Resource: ${CheckPagesScrappedArn}
+    ResultPath: '$.result'
     Next: CheckValueCondition
 
   CheckValueCondition:
