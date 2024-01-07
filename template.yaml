@@ -33,6 +33,15 @@ Resources:
     Metadata:
       BuildMethod: makefile
 
+  CheckPagesScrapped:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/check-pages-scrapped/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+
   GetPageCount:
     Type: AWS::Serverless::Function
     Properties:
@@ -54,7 +63,7 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          SQS_QUEUE_URL: !Ref ScrappedURLQueue
+          SQS_QUEUE_URL: !Ref ScrappedURLsQueue
       Layers:
       - !Ref ScrapperLayer
 
