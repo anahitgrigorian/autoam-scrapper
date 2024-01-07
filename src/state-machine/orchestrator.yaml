@@ -4,15 +4,16 @@ States:
   CheckPagesScrapped:
     Type: Task
     Resource: ${CheckPagesScrappedArn}
+    ResultPaht: "$.check"
     Next: CheckValueCondition
 
   CheckValueCondition:
     Type: Choice
     Choices:
-      - Variable: '$'
+      - Variable: '$.check'
         StringEquals: "scrapped"
         Next: ProcessNewListings
-      - Variable: '$'
+      - Variable: '$.check'
         StringEquals: "not_scrapped"
         Next: GetPageCount
 
@@ -24,12 +25,12 @@ States:
   GetPageCount:
     Type: Task
     Resource: ${GetPageCountArn}
-    ResultPath: '$'
+    ResultPath: '$.count'
     Next: 'ProcessPages'
 
   ProcessPages:
     Type: Map
-    ItemsPath: '$'
+    ItemsPath: '$.count'
     MaxConcurrency: 10
     Iterator:
       StartAt: 'PageScrapperLambda'
