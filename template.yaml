@@ -8,36 +8,22 @@ Description: >
 Globals:
   Function:
     Timeout: 60
-    MemorySize: 512
+    MemorySize: 128
 
 Resources:
   OrchestratorStateMachine:
     Type: AWS::Serverless::StateMachine
-    RoleArn: !GetAtt OrchestratorStateMachineRole.Arn
     Properties:
-      Definition:
-        StartAt: 'GetPageCount'
-        States:
-          GetPageCount:
-            Type: 'Task'
-            Resource: !GetAtt GetPageCount.Arn
-            ResultPath: '$.count'
-            Next: 'ProcessPages'
-
-          PageScrapper:
-            Type: 'Map'
-            ItemsPath: '$.count'
-            MaxConcurrency: 10
-            Iterator:
-              StartAt: 'PageScrapperLambda'
-              States:
-                PageScrapperLambda:
-                  Type: 'Task'
-                  Resource: !GetAtt PageScrapperFunction.Arn
-                  InputPath: '$.iterator.index'
-                  End: true
-            End: true
-        
+      DefinitionUri: src/state-machine/orchestrator.yaml
+      DefinitionSubstitutions:
+        GetPageCountArn: !GetAtt GetPageCount.Arn
+        PageScrapperFunctionArn: !GetAtt PageScrapperFunction.Arn
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref GetPageCount
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PageScrapperFunction
+      
   ScrapperLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -76,27 +62,3 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: ScrappedUrls
-
-  OrchestratorStateMachineRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: OrchestratorStateMachineRole
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: states.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: OrchestratorStateMachinePolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: lambda:InvokeFunction
-                Resource: !GetAtt GetPageCount.Arn
-              - Effect: Allow
-                Action: lambda:InvokeFunction
-                Resource: !GetAtt PageScrapperFunction.Arn
-

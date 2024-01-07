@@ -1,0 +1,22 @@
+---
+StartAt: 'GetPageCount'
+States:
+  GetPageCount:
+    Type: 'Task'
+    Resource: ${GetPageCountArn}
+    ResultPath: '$.count'
+    Next: 'ProcessPages'
+
+  PageScrapper:
+    Type: 'Map'
+    ItemsPath: '$.count'
+    MaxConcurrency: 10
+    Iterator:
+      StartAt: 'PageScrapperLambda'
+      States:
+        PageScrapperLambda:
+          Type: 'Task'
+          Resource: ${PageScrapperFunctionArn}
+          InputPath: '$.iterator.index'
+          End: true
+    End: true
