@@ -1,5 +1,5 @@
 ---
-StartAt: 'GetPageCount'
+StartAt: 'CheckPagesScrapped'
 States:
   CheckPagesScrapped:
     Type: Task
