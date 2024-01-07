@@ -39,4 +39,9 @@ States:
           Resource: ${PageScrapperFunctionArn}
           InputPath: '$.iterator.index'
           End: true
+    Next: 'SetPagesScrapped'
+
+  SetPagesScrapped:
+    Type: Task
+    Resource: ${SetPagesScrapped}
     End: true
