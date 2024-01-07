@@ -4,16 +4,16 @@ States:
   CheckPagesScrapped:
     Type: Task
     Resource: ${CheckPagesScrappedArn}
-    ResultPath: '$.result'
+    ResultPath: '$.body.result'
     Next: CheckValueCondition
 
   CheckValueCondition:
     Type: Choice
     Choices:
-      - Variable: "$.result"
+      - Variable: "$.body.result"
         StringEquals: "scrapped"
         Next: ProcessNewListings
-      - Variable: "$.result"
+      - Variable: "$.body.result"
         StringEquals: "not_scrapped"
         Next: GetPageCount
 
@@ -25,7 +25,7 @@ States:
   GetPageCount:
     Type: Task
     Resource: ${GetPageCountArn}
-    ResultPath: '$.pages_count'
+    ResultPath: '$.body.pages_count'
     Next: 'ProcessPages'
 
   ProcessPages:
