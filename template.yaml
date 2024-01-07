@@ -18,9 +18,12 @@ Resources:
       DefinitionSubstitutions:
         GetPageCountArn: !GetAtt GetPageCount.Arn
         PageScrapperFunctionArn: !GetAtt PageScrapperFunction.Arn
+        ProcessNewListingsArn: !GetAtt ProcessNewListingsFunction.Arn
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref GetPageCount
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PageScrapperFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref PageScrapperFunction
       
@@ -33,7 +36,7 @@ Resources:
     Metadata:
       BuildMethod: makefile
 
-  CheckPagesScrapped:
+  CheckPagesScrappedFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/check-pages-scrapped/
@@ -41,6 +44,17 @@ Resources:
       Runtime: python3.9
       Architectures:
         - x86_64
+
+  ProcessNewListingsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/process-new-listings/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Layers:
+      - !Ref ScrapperLayer
 
   GetPageCount:
     Type: AWS::Serverless::Function
