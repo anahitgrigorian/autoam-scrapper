@@ -24,12 +24,12 @@ States:
   GetPageCount:
     Type: Task
     Resource: ${GetPageCountArn}
-    ResultPath: '$.body.pages_count'
+    ResultPath: '$'
     Next: 'ProcessPages'
 
   ProcessPages:
     Type: Map
-    ItemsPath: '$.pages_count'
+    ItemsPath: '$'
     MaxConcurrency: 10
     Iterator:
       StartAt: 'PageScrapperLambda'

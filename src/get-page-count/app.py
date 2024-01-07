@@ -18,10 +18,10 @@ def lambda_handler(event, context):
         pages_count = get_pages_count(url, ip_address)
 
         # Return the result
-        return {"statusCode": 200, "body": json.dumps({"pages_count": pages_count})}
+        return pages_count
     except Exception as e:
         # Handle exceptions and return an error response
-        return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
+        return str(e)
 
 def get_pages_count(url, ip_address):
     # Step 1: Send an HTTP GET request to the URL
