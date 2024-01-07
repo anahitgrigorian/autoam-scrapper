@@ -135,6 +135,26 @@ Resources:
       Architectures:
         - x86_64
 
+  WarehouseProvisioner:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/warehouse-provisioner/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref ScrappedURLsQueue
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::GetAtt:
+                - ScrappedURLsQueue
+                - Arn
+
   ScrappedURLsQueue:
     Type: AWS::SQS::Queue
     Properties:
