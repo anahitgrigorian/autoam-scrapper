@@ -18,7 +18,7 @@ Resources:
       DefinitionSubstitutions:
         CheckPagesScrappedArn: !GetAtt CheckPagesScrappedFunction.Arn
         GetPageCountArn: !GetAtt GetPageCountFunction.Arn
-        PageScrappeArn: !GetAtt PageScrapperFunction.Arn
+        PageScrapperArn: !GetAtt PageScrapperFunction.Arn
         ProcessNewListingsArn: !GetAtt ProcessNewListingsFunction.Arn
         SetPagesScrappedArn: !GetAtt SetPagesScrappedFunction.Arn
       Policies:
