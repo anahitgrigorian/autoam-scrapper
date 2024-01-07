@@ -48,6 +48,13 @@ Resources:
       CodeUri: src/check-pages-scrapped/
       Handler: app.lambda_handler
       Runtime: python3.9
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - Statement:
+          - Effect: Allow
+            Action:
+              - ssm:*
+            Resource: "*"
       Architectures:
         - x86_64
 
@@ -59,6 +66,12 @@ Resources:
       Runtime: python3.9
       Architectures:
         - x86_64
+      - AWSLambdaBasicExecutionRole
+      - Statement:
+          - Effect: Allow
+            Action:
+              - sqs:*
+            Resource: "*"
       Layers:
       - !Ref ScrapperLayer
 
@@ -84,6 +97,12 @@ Resources:
       Environment:
         Variables:
           SQS_QUEUE_URL: !Ref ScrappedURLsQueue
+      - AWSLambdaBasicExecutionRole
+      - Statement:
+          - Effect: Allow
+            Action:
+              - sqs:*
+            Resource: "*"
       Layers:
       - !Ref ScrapperLayer
 
@@ -93,6 +112,12 @@ Resources:
       CodeUri: src/set-pages-scrapped/
       Handler: app.lambda_handler
       Runtime: python3.9
+      - AWSLambdaBasicExecutionRole
+      - Statement:
+          - Effect: Allow
+            Action:
+              - ssm:*
+            Resource: "*"
       Architectures:
         - x86_64
 
