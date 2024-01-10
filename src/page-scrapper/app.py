@@ -88,7 +88,6 @@ def get_urls_from_page(url, ip_address, page_number):
 
 
 def put_urls_to_sqs(urls):
-    # Replace 'your_sqs_queue_url' with the actual URL of your SQS queue
     sqs_queue_url = os.environ.get("SQS_QUEUE_URL")
 
     if not sqs_queue_url:

@@ -8,9 +8,16 @@ def lambda_handler(event, context):
     try:
         # Read the IP address from Lambda environment variables
         ip_address = os.environ.get("AUTOAM_IP_ADDRESS")
+        sqs_queue_url = os.environ.get("SQS_QUEUE_URL")
 
         if not ip_address:
             raise Exception("AUTOAM_IP_ADDRESS environment variable is not set.")
+        
+        if not sqs_queue_url:
+            raise Exception("SQS_QUEUE_URL environment variable is not set.")
+
+        # Initialize SQS client
+        sqs = boto3.client('sqs')
 
         for record in event['Records']:
             listing_url = json.loads(record['body'])
@@ -18,7 +25,7 @@ def lambda_handler(event, context):
 
             # If processing is successful, delete the message from the queue
             sqs.delete_message(
-                QueueUrl=queue_url,
+                QueueUrl=sqs_queue_url,
                 ReceiptHandle=record['receiptHandle']
             )
 
@@ -69,8 +76,21 @@ def get_data_from_listing(listing_url, ip_address):
             car_model = soup.select('h1 a')[-1].text
             car_insert_date = soup.select('.attrs span')[0].text
             car_location = soup.select('.attrs span')[1].text
-            car_price = soup.select('.offer-top-price .fnum')[0].text.replace(" ", "")
+            car_price = soup.select('.offer-top-price .price span, .offer-top-price .price small')[0].text.replace(" ", "").lower()
             car_seller_id = soup.select('.ad-seller-details a.call-seller')[0].get('data-sellerid')
+            car_pricing_attributes = soup.select('.offer-top-price .price-attrs')[0].text.lower()
+            car_vin = soup.select('.pad-left-6')[0].text.strip() if len(soup.select('.pad-left-6')) > 0 else None
+            car_is_exchangable = False
+            car_pay_with_installments = False
+            car_is_urgent = False
+            car_options = soup.select('.ad-options')[0].text.strip() if len(soup.select('.ad-options')) > 0 else None
+
+            if "exchange" in car_pricing_attributes:
+                car_is_exchangable = True
+            if "installments" in car_pricing_attributes:
+                car_pay_with_installments = True
+            if len(soup.select('.urgent-stiker')) > 0:
+                car_is_urgent = True
 
             # Extract additional details from the listing page
             car_details = {}
@@ -87,9 +107,11 @@ def get_data_from_listing(listing_url, ip_address):
                 car_details["milage_measurement"] = milage_list[1]
 
             # Print or return the extracted data as needed
-            print(car_year, car_make, car_model)
+            print(car_year, car_make, car_model, car_vin, car_is_urgent)
+            print(car_is_exchangable, car_pay_with_installments)
             print(car_insert_date, car_location, car_price, car_seller_id)
             print(car_details)
+            print(car_options)
         else:
             raise Exception(f"Failed to make the GET request to the listing endpoint. Status code: {listing_response.status_code}")
     else:

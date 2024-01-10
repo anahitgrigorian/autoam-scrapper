@@ -1,5 +1,4 @@
 import boto3
-import json
 import botocore
 
 def lambda_handler(event, context):
