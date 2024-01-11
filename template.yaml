@@ -219,12 +219,6 @@ Resources:
         PasswordLength: 16
         ExcludeCharacters: '"@/\'
 
-  RDSInitLambdaSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: "DB init Lambda security group"
-      VpcId: !Ref VpcId
-
   RDSInitLambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -271,10 +265,6 @@ Resources:
           RDS_SECRET_ARN: !Ref RDSSecret
       Layers:
       - !Ref ScrapperLayer
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref RDSInitLambdaSecurityGroup
-        SubnetIds: !Ref SubnetIds
 
   RDSDatabaseCustomResource:
     Type: 'Custom::RDSDatabaseResource'
