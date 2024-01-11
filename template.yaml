@@ -181,7 +181,7 @@ Resources:
       - IpProtocol: tcp
         FromPort: 5432
         ToPort: 5432
-        CidrIp: 0.0.0.0/0
+        CidrIp: 172.31.0.0/16
 
   # DatabaseSubnetGroup: 
   #   Type: "AWS::RDS::DBSubnetGroup"
@@ -195,17 +195,17 @@ Resources:
       AllocatedStorage: 20
       DBInstanceIdentifier: autoam
       Engine: postgres
-      MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref RDSSecrets, ':SecretString:username}}' ]]
-      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref RDSSecrets, ':SecretString:password}}' ]]
+      MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref RDSSecret, ':SecretString:username}}' ]]
+      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref RDSSecret, ':SecretString:password}}' ]]
       DBInstanceClass: db.t3.micro
       # DBSubnetGroupName: !Ref DatabaseSubnetGroup
       PubliclyAccessible: true
       VPCSecurityGroups:
         - !Ref DatabaseSecurityGroup
       DependsOn:
-      - RDSSecrets
+      - RDSSecret
 
-  RDSSecrets:
+  RDSSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
       Description: 'This is the secret for my RDS instance'
