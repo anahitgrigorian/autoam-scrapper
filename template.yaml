@@ -173,6 +173,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: ScrappedUrls
+      VisibilityTimeout: 60
 
   RDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
