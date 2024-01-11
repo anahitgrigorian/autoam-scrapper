@@ -172,7 +172,7 @@ Resources:
     Properties:
       QueueName: ScrappedUrls
 
-  DatabaseSecurityGroup:
+  RDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Sample DB init DB security group"
@@ -183,11 +183,11 @@ Resources:
         ToPort: 5432
         CidrIp: 172.31.0.0/16
 
-  # DatabaseSubnetGroup: 
-  #   Type: "AWS::RDS::DBSubnetGroup"
-  #   Properties: 
-  #     DBSubnetGroupDescription: "Sample Subnet Group for RDS database init"
-  #     SubnetIds: !Ref SubnetIds
+  RDSSubnetGroup: 
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties: 
+      DBSubnetGroupDescription: "Subnet Group for RDS database"
+      SubnetIds: !Ref SubnetIds
 
   RDSDatabase:
     Type: AWS::RDS::DBInstance
@@ -198,10 +198,10 @@ Resources:
       MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref RDSSecret, ':SecretString:username}}' ]]
       MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref RDSSecret, ':SecretString:password}}' ]]
       DBInstanceClass: db.t3.micro
-      # DBSubnetGroupName: !Ref DatabaseSubnetGroup
+      DBSubnetGroupName: !Ref RDSSubnetGroup
       PubliclyAccessible: true
       VPCSecurityGroups:
-        - !Ref DatabaseSecurityGroup
+        - !Ref RDSSecurityGroup
       DependsOn:
       - RDSSecret
 
