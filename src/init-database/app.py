@@ -28,7 +28,7 @@ def lambda_handler(event, context):
         smclient = boto3.client('secretsmanager')
         alphabet = string.ascii_letters + string.digits
 
-        master_credential = json.loads(smclient.get_secret_value(SecretId=event['ResourceProperties']['RdsProperties']['MasterSecretId'])['SecretString'])
+        master_credential = json.loads(smclient.get_secret_value(SecretId=event['ResourceProperties']['RdsProperties']['SecretARN'])['SecretString'])
 
         if 'RdsProperties' in event['ResourceProperties']:
             if 'Execute' in event['ResourceProperties']['RdsProperties'] and (event['RequestType'] == "Create" or event['RequestType'] == "Update"):
