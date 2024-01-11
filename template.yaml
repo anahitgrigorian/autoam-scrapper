@@ -191,6 +191,8 @@ Resources:
 
   RDSDatabase:
     Type: AWS::RDS::DBInstance
+    DependsOn:
+      - RDSSecret
     Properties:
       AllocatedStorage: 20
       DBInstanceIdentifier: autoam
@@ -202,8 +204,6 @@ Resources:
       PubliclyAccessible: true
       VPCSecurityGroups:
         - !Ref RDSSecurityGroup
-      DependsOn:
-      - RDSSecret
 
   RDSSecret:
     Type: AWS::SecretsManager::Secret
