@@ -44,6 +44,11 @@ Resources:
             FunctionName: !Ref ProcessNewListingsFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref SetPagesScrappedFunction
+      Events:
+        ScheduleEvent:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: "cron(0 0 ? * * *)"
       
   ScrapperLayer:
     Type: AWS::Serverless::LayerVersion
@@ -162,7 +167,7 @@ Resources:
       Layers:
       - !Ref ScrapperLayer
       Events:
-        MySQSEvent:
+        SQSEvent:
           Type: SQS
           Properties:
             Queue:
@@ -308,35 +313,4 @@ Resources:
                 Permissions: CONNECT
               - Database: autoam
                 Permissions: ALL PRIVILEGES
-
-  SchedulerEventBridgeRule:
-    Type: "AWS::Events::Rule"
-    Properties:
-      Name: OrchestratorEventBridgeRule
-      Description: "Run every day at 4 am GMT+4"
-      ScheduleExpression: "cron(0 0 ? * * *)"
-      State: "ENABLED"
-      Targets:
-        - Arn: !GetAtt OrchestratorStateMachine.Arn
-          Id: "TargetState"
-      RoleArn: !GetAtt SchedulerEventBridgeRuleRole.Arn
   
-  SchedulerEventBridgeRuleRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: SchedulerEventBridgeRuleRole
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: events.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: stepFunctionAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: states:StartExecution
-                Resource: !GetAtt OrchestratorStateMachine.Arn
