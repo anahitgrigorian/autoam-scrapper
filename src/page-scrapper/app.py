@@ -98,13 +98,9 @@ def put_urls_to_sqs(urls):
 
     # Put each URL to the SQS queue
     for url in urls:
-        sqs_message = {
-            'Url': url
-        }
-
         # Send the message to SQS
         sqs.send_message(
             QueueUrl=sqs_queue_url,
-            MessageBody=json.dumps(sqs_message)
+            MessageBody=url
         )
         
