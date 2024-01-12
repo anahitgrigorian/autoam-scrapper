@@ -18,15 +18,15 @@ def lambda_handler(event, context):
         url = "https://{}/lang/en".format(ip_address)
 
         # Call the function to get the pages count
-        pages_count = get_pages_count(url, ip_address)
+        pages = get_pages(url, ip_address)
 
         # Return the result
-        return pages_count
+        return pages
     except Exception as e:
         # Handle exceptions and return an error response
         return str(e)
 
-def get_pages_count(url, ip_address):
+def get_pages(url, ip_address):
     # Step 1: Send an HTTP GET request to the URL
     response = requests.get(url, verify=False)
 
@@ -76,7 +76,7 @@ def get_pages_count(url, ip_address):
             soup = BeautifulSoup(post_response.text, 'html.parser')
             pages_count = int(soup.select(".pagination li a")[-2].text)
 
-            return pages_count
+            return list(range(1, pages_count+1))
         else:
             raise Exception("Failed to make the POST request to the search endpoint. Status code: {}".format(post_response.status_code))
     else:
