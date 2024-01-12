@@ -19,7 +19,7 @@ Parameters:
 
 Globals:
   Function:
-    Timeout: 60
+    Timeout: 120
     MemorySize: 128
 
 Resources:
@@ -300,6 +300,7 @@ Resources:
                   make varchar(255) NULL,
                   model varchar(255) NULL,
                   vin varchar(255) NULL,
+                  is_negotiable bool NULL,
                   is_urgent bool NULL,
                   is_exchangable bool NULL,
                   pay_with_installments bool NULL,
