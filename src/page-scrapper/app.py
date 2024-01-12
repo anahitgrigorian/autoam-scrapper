@@ -15,7 +15,7 @@ def lambda_handler(event, context):
         if not ip_address:
             raise Exception("AUTOAM_IP_ADDRESS environment variable is not set.")
 
-        page_number = event
+        page_number = event['page']
         # Hardcoded website URL (using the IP address)
         url = "https://{}/lang/en".format(ip_address)
 

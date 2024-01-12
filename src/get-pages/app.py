@@ -17,6 +17,8 @@ def lambda_handler(event, context):
         # Hardcoded website URL (using the IP address)
         url = "https://{}/lang/en".format(ip_address)
 
+        return [1, 2]
+
         # Call the function to get the pages count
         pages = get_pages(url, ip_address)
 
