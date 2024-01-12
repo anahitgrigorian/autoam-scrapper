@@ -184,13 +184,13 @@ Resources:
   RDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: "Sample DB init DB security group"
+      GroupDescription: "RDS DB security group"
       VpcId: !Ref VpcId
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 5432
         ToPort: 5432
-        CidrIp: 172.31.0.0/16
+        CidrIp: 0.0.0.0/0
 
   RDSSubnetGroup: 
     Type: "AWS::RDS::DBSubnetGroup"
