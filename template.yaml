@@ -154,6 +154,13 @@ Resources:
       CodeUri: src/warehouse-provisioner/
       Handler: app.lambda_handler
       Runtime: python3.9
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:*
+            Resource: "*"
       Architectures:
         - x86_64
       Environment:

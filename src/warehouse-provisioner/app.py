@@ -5,6 +5,9 @@ import boto3
 import json
 import psycopg2
 from datetime import datetime
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 def lambda_handler(event, context):
     try:
@@ -135,7 +138,7 @@ def get_data_from_listing(listing_url, ip_address):
 def insert_into_database(data):
     # Get PostgreSQL credentials.
     smclient = boto3.client('secretsmanager')
-    master_credential = json.loads(smclient.get_secret_value(os.environ.get("RDS_SECRET_ARN"))['SecretString'])
+    master_credential = json.loads(smclient.get_secret_value(SecretId=os.environ.get("RDS_SECRET_ARN"))['SecretString'])
 
     # Connect to the PostgreSQL database
     conn = psycopg2.connect(

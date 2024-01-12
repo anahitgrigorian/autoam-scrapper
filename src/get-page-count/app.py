@@ -2,6 +2,9 @@ import os
 import requests
 import json
 from bs4 import BeautifulSoup
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 def lambda_handler(event, context):
     try:
