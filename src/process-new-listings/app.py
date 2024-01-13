@@ -32,9 +32,10 @@ def lambda_handler(event, context):
         return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
 
 def get_new_urls_from_page(url, ip_address):
+    page_urls = []
+    page_number = 1
+
     while True:
-        page_number = 1
-        page_urls = []
         # Step 1: Send an HTTP GET request to the URL
         response = requests.get(url, verify=False)
 
@@ -86,7 +87,7 @@ def get_new_urls_from_page(url, ip_address):
                 cars = soup.find_all(class_="card")
                 page_new_urls = [car.select(".card-image a")[0].get("href") for car in cars]
                 if check_has_matching(page_new_urls):
-                    page_urls.append(page_new_urls)
+                    page_urls+=page_new_urls
                     return page_urls
                 page_number+=1
             else:
@@ -151,3 +152,4 @@ def put_urls_to_sqs(urls):
             MessageBody=url
         )
         
+lambda_handler("", "")
