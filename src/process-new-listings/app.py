@@ -151,4 +151,3 @@ def put_urls_to_sqs(urls):
             QueueUrl=sqs_queue_url,
             MessageBody=url
         )
-        
