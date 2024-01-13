@@ -152,4 +152,3 @@ def put_urls_to_sqs(urls):
             MessageBody=url
         )
         
-lambda_handler("", "")
