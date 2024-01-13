@@ -89,10 +89,16 @@ Resources:
           - Effect: Allow
             Action:
               - sqs:*
+              - secretsmanager:*
             Resource: "*"
       Environment:
         Variables:
           AUTOAM_IP_ADDRESS: !Ref AutoAMAddress
+          SQS_QUEUE_URL: !Ref ScrappedURLsQueue
+          RDS_ENDPOINT: !GetAtt RDSDatabase.Endpoint.Address
+          RDS_PORT: !GetAtt RDSDatabase.Endpoint.Port
+          RDS_DATABASE_NAME: autoam
+          RDS_SECRET_ARN: !Ref RDSSecret
       Layers:
       - !Ref ScrapperLayer
 
