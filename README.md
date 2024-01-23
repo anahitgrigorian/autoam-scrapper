@@ -8,6 +8,5 @@ The project is built using [AWS SAM](https://aws.amazon.com/serverless/sam/) to 
 
 The main component of the entire architecture is the AWS State Machine, which runs on a daily schedule. The state machine has two branches: one for fetching the entire dataset and another for retrieving new listings.
 
-![step function first iteration](docs/first-iteration.png)
-![step function later iterations](docs/new-listings.png)
+![step function](docs/step-function.png)
 
