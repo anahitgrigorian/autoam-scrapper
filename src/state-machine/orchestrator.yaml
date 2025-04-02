@@ -3,7 +3,7 @@ StartAt: 'GetPageCount'
 States:
   CheckPagesScrapped:
     Type: Task
-    Resource: ${CheckPagesScrapped}
+    Resource: ${CheckPagesScrappedArn}
     Next: CheckValueCondition
 
   CheckValueCondition:
@@ -36,12 +36,12 @@ States:
       States:
         PageScrapperLambda:
           Type: 'Task'
-          Resource: ${PageScrapperFunctionArn}
+          Resource: ${PageScrapperArn}
           InputPath: '$.iterator.index'
           End: true
     Next: 'SetPagesScrapped'
 
   SetPagesScrapped:
     Type: Task
-    Resource: ${SetPagesScrapped}
+    Resource: ${SetPagesScrappedArn}
     End: true
