@@ -19,13 +19,16 @@ Resources:
         GetPageCountArn: !GetAtt GetPageCount.Arn
         PageScrapperFunctionArn: !GetAtt PageScrapperFunction.Arn
         ProcessNewListingsArn: !GetAtt ProcessNewListingsFunction.Arn
+        SetPagesScrappedArn: !GetAtt SetPagesScrappedFunction.Arn
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref GetPageCount
         - LambdaInvokePolicy:
             FunctionName: !Ref PageScrapperFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref PageScrapperFunction
+            FunctionName: !Ref ProcessNewListingsFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref SetPagesScrappedFunction
       
   ScrapperLayer:
     Type: AWS::Serverless::LayerVersion
@@ -80,6 +83,15 @@ Resources:
           SQS_QUEUE_URL: !Ref ScrappedURLsQueue
       Layers:
       - !Ref ScrapperLayer
+
+  SetPagesScrappedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/set-pages-scrapped/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
 
   ScrappedURLsQueue:
     Type: AWS::SQS::Queue
