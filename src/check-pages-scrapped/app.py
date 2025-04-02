@@ -15,20 +15,10 @@ def lambda_handler(event, context):
         else:
             result = 'not_scrapped'
 
-        return {
-            'statusCode': 200,
-            'body': json.dumps({'result': result}),
-        }
+        return result
 
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] == 'ParameterNotFound':
-            result = 'not_scrapped'
-            return {
-                'statusCode': 200,
-                'body': json.dumps({'result': result}),
-            }
+            return 'not_scrapped'
         else:
-            return {
-                'statusCode': 500,
-                'body': json.dumps({'error': str(e)}),
-            }
+            return str(e)
