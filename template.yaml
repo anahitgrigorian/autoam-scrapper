@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  auto.am scrapper
+
+  The project is aimed to scrape car data from https://auto.am/.
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 512
+
+Resources:
+  OrchestratorStateMachine:
+    Type: AWS::Serverless::StateMachine
+    RoleArn: !GetAtt OrchestratorStateMachineRole.Arn
+    Properties:
+      Definition:
+        StartAt: 'GetPageCount'
+        States:
+          GetPageCount:
+            Type: 'Task'
+            Resource: !GetAtt GetPageCount.Arn
+            ResultPath: '$.count'
+            Next: 'ProcessPages'
+
+          PageScrapper:
+            Type: 'Map'
+            ItemsPath: '$.count'
+            MaxConcurrency: 10
+            Iterator:
+              StartAt: 'PageScrapperLambda'
+              States:
+                PageScrapperLambda:
+                  Type: 'Task'
+                  Resource: !GetAtt PageScrapperFunction.Arn
+                  InputPath: '$.iterator.index'
+                  End: true
+            End: true
+        
+  ScrapperLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: src/layer
+      CompatibleRuntimes:
+        - python3.9
+    Metadata:
+      BuildMethod: makefile
+
+  GetPageCount:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/get-page-count/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Layers:
+      - !Ref ScrapperLayer
+
+  PageScrapperFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/page-scrapper/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref ScrappedURLQueue
+      Layers:
+      - !Ref ScrapperLayer
+
+  ScrappedURLsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ScrappedUrls
+
+  OrchestratorStateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: OrchestratorStateMachineRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: OrchestratorStateMachinePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt GetPageCount.Arn
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt PageScrapperFunction.Arn
+
