@@ -5,6 +5,10 @@ Description: >
 
   The project is aimed to scrape car data from https://auto.am/.
 
+Parameters:
+  AUTOAM_IP_ADDRESS:
+    Type: String
+
 Globals:
   Function:
     Timeout: 60
@@ -73,6 +77,9 @@ Resources:
             Action:
               - sqs:*
             Resource: "*"
+      Environment:
+        Variables:
+          AUTOAM_IP_ADDRESS: !Ref AUTOAM_IP_ADDRESS
       Layers:
       - !Ref ScrapperLayer
 
@@ -84,6 +91,9 @@ Resources:
       Runtime: python3.9
       Architectures:
         - x86_64
+      Environment:
+        Variables:
+          AUTOAM_IP_ADDRESS: !Ref AUTOAM_IP_ADDRESS
       Layers:
       - !Ref ScrapperLayer
 
@@ -98,6 +108,7 @@ Resources:
       Environment:
         Variables:
           SQS_QUEUE_URL: !Ref ScrappedURLsQueue
+          AUTOAM_IP_ADDRESS: !Ref AUTOAM_IP_ADDRESS
       Policies:
       - AWSLambdaBasicExecutionRole
       - Statement:
