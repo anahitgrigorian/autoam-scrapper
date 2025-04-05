@@ -210,7 +210,7 @@ Resources:
     Properties:
       Description: 'This is the secret for my RDS instance'
       GenerateSecretString:
-        SecretStringTemplate: '{"username": "admin"}'
+        SecretStringTemplate: '{"username": "postgres"}'
         GenerateStringKey: 'password'
         PasswordLength: 16
         ExcludeCharacters: '"@/\'
