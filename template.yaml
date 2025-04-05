@@ -154,6 +154,7 @@ Resources:
       Environment:
         Variables:
           SQS_QUEUE_URL: !Ref ScrappedURLsQueue
+          AUTOAM_IP_ADDRESS: !Ref AutoAMAddress
           # RDS_ENDPOINT: !GetAtt RDSDatabase.Endpoint.Address
           # RDS_PORT: !GetAtt RDSDatabase.Endpoint.Port
           # RDS_DATABASE_NAME: autoam
