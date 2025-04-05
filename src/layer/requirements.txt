@@ -1,3 +1,4 @@
 pandas
 requests
 bs4
+psycopg2

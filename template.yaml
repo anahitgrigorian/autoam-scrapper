@@ -9,6 +9,14 @@ Parameters:
   AutoAMAddress:
     Type: String
 
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The VPC to deploy into
+
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: List of subnet IDs to assign to the database and Lambda
+
 Globals:
   Function:
     Timeout: 60
@@ -146,6 +154,10 @@ Resources:
       Environment:
         Variables:
           SQS_QUEUE_URL: !Ref ScrappedURLsQueue
+          RDS_ENDPOINT: !GetAtt RDSDatabase.Endpoint.Address
+          RDS_PORT: !GetAtt RDSDatabase.Endpoint.Port
+          RDS_DATABASE_NAME: autoam
+          RDS_SECRET_ARN: !Ref RDSSecret
       Events:
         MySQSEvent:
           Type: SQS
@@ -159,3 +171,144 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: ScrappedUrls
+
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Sample DB init DB security group"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 5432
+        ToPort: 5432
+        CidrIp: 0.0.0.0/0
+
+  # DatabaseSubnetGroup: 
+  #   Type: "AWS::RDS::DBSubnetGroup"
+  #   Properties: 
+  #     DBSubnetGroupDescription: "Sample Subnet Group for RDS database init"
+  #     SubnetIds: !Ref SubnetIds
+
+  RDSDatabase:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 20
+      DBInstanceIdentifier: autoam
+      Engine: postgres
+      MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref RDSSecrets, ':SecretString:username}}' ]]
+      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref RDSSecrets, ':SecretString:password}}' ]]
+      DBInstanceClass: db.t3.micro
+      # DBSubnetGroupName: !Ref DatabaseSubnetGroup
+      PubliclyAccessible: true
+      VPCSecurityGroups:
+        - !Ref DatabaseSecurityGroup
+      DependsOn:
+      - RDSSecrets
+
+  RDSSecrets:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: 'This is the secret for my RDS instance'
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "admin"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+
+  RDSInitLambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "DB init Lambda security group"
+      VpcId: !Ref VpcId
+
+  RDSInitLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: |
+        {
+          "Statement": [{
+            "Action": "sts:AssumeRole",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "lambda.amazonaws.com"
+            }
+          }]
+        }
+      Policies:
+        - PolicyName: !Sub RDSInitLambdaFunctionPolicy
+          PolicyDocument: |
+            {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:InvokeFunction",
+                    "ec2:*",
+                    "logs:*",
+                    "secretsmanager:*"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+
+  RDSInitLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Role: !GetAtt RDSInitLambdaRole.Arn
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      CodeUri: ./src/init-database/
+      Environment:
+        Variables:
+          RDS_ENDPOINT: !GetAtt RDSDatabase.Endpoint.Address
+          RDS_PORT: !GetAtt RDSDatabase.Endpoint.Port
+          RDS_DATABASE_NAME: autoam
+          RDS_SECRET_ARN: !Ref RDSSecret
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref RDSInitLambdaSecurityGroup
+        SubnetIds: !Ref SubnetIds
+
+  RDSDatabaseCustomResource:
+    Type: 'Custom::RDSDatabaseResource'
+    DependsOn:
+      - RDSSecret
+    Properties: 
+      ServiceToken: !GetAtt RDSInitLambdaFunction.Arn
+      StackName: !Ref "AWS::StackName"
+      RdsProperties:
+        EndpointAddress: !GetAtt RDSDatabase.Endpoint.Address
+        SecretARN: !Ref RDSSecret
+        Execute:
+          - DatabaseName: "postgres"
+            Scripts:
+              - 'CREATE DATABASE "autoam";'
+          - DatabaseName: "autoam"
+            Scripts:
+              - 'CREATE TABLE public.cars_raw_data (
+                  listing_id int4 NOT NULL,
+                  "year" int4 NULL,
+                  make varchar(255) NULL,
+                  model varchar(255) NULL,
+                  vin varchar(255) NULL,
+                  is_urgent bool NULL,
+                  is_exchangable bool NULL,
+                  pay_with_installments bool NULL,
+                  insert_date date NULL,
+                  "location" varchar(255) NULL,
+                  price int4 NULL,
+                  seller_id int4 NULL,
+                  details jsonb NULL,
+                  "options" text NULL,
+                  created_at timestamptz NOT NULL DEFAULT now(),
+                  CONSTRAINT cars_raw_data_pkey PRIMARY KEY (listing_id)
+                );'
+        DatabaseUsers:
+          - Name: analytics
+            SecretId: "analytics-users"
+            Grants:
+              - Database: postgres
+                Permissions: CONNECT
+              - Database: autoam
+                Permissions: ALL PRIVILEGES

@@ -3,6 +3,8 @@ import requests
 from bs4 import BeautifulSoup
 import boto3
 import json
+import psycopg2
+from datetime import datetime
 
 def lambda_handler(event, context):
     try:
@@ -21,7 +23,10 @@ def lambda_handler(event, context):
 
         for record in event['Records']:
             listing_url = json.loads(record['body'])
-            get_data_from_listing(listing_url, ip_address)
+            data = get_data_from_listing(listing_url, ip_address)
+
+            # Insert data into PostgreSQL database
+            insert_into_database(data)
 
             # If processing is successful, delete the message from the queue
             sqs.delete_message(
@@ -30,7 +35,7 @@ def lambda_handler(event, context):
             )
 
         # Return the result
-        return {"statusCode": 200, "body": json.dumps({"page_urls": page_urls})}
+        return {"statusCode": 200, "body": json.dumps({"page_urls": event['Records']})}
     except Exception as e:
         # Handle exceptions and return an error response
         return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
@@ -75,7 +80,7 @@ def get_data_from_listing(listing_url, ip_address):
             car_make = soup.select('h1 a')[-2].text
             car_model = soup.select('h1 a')[-1].text
             car_insert_date = soup.select('.attrs span')[0].text
-            car_location = soup.select('.attrs span')[1].text
+            car_location = soup.select('.attrs span')[1].text.split(", ")[1] if len(soup.select('.attrs span')[1].text.split(", ")) > 1 else None
             car_price = soup.select('.offer-top-price .price span, .offer-top-price .price small')[0].text.replace(" ", "").lower()
             car_seller_id = soup.select('.ad-seller-details a.call-seller')[0].get('data-sellerid')
             car_pricing_attributes = soup.select('.offer-top-price .price-attrs')[0].text.lower()
@@ -106,13 +111,74 @@ def get_data_from_listing(listing_url, ip_address):
                 car_details["mileage"] = milage_list[0]
                 car_details["milage_measurement"] = milage_list[1]
 
-            # Print or return the extracted data as needed
-            print(car_year, car_make, car_model, car_vin, car_is_urgent)
-            print(car_is_exchangable, car_pay_with_installments)
-            print(car_insert_date, car_location, car_price, car_seller_id)
-            print(car_details)
-            print(car_options)
+            return {
+                "listing_id": listing_url.split("/")[2],
+                "car_year": car_year,
+                "car_make": car_make,
+                "car_model": car_model,
+                "car_vin": car_vin,
+                "car_is_urgent": car_is_urgent,
+                "car_is_exchangable": car_is_exchangable,
+                "car_pay_with_installments": car_pay_with_installments,
+                "car_insert_date": datetime.strptime(car_insert_date, "%d.%m.%Y").strftime("%Y-%m-%d"), 
+                "car_location": car_location,
+                "car_price": car_price,
+                "car_seller_id": car_seller_id,
+                "car_details": car_details,
+                "car_options": car_options
+            }
         else:
             raise Exception(f"Failed to make the GET request to the listing endpoint. Status code: {listing_response.status_code}")
     else:
         raise Exception(f"Failed to retrieve cookies. Status code: {response.status_code}")
+
+def insert_into_database(data):
+    # Get PostgreSQL credentials.
+    smclient = boto3.client('secretsmanager')
+    master_credential = json.loads(smclient.get_secret_value(os.environ.get("RDS_SECRET_ARN"))['SecretString'])
+
+    # Connect to the PostgreSQL database
+    conn = psycopg2.connect(
+        host=os.environ.get("RDS_ENDPOINT"),
+        port=os.environ.get("RDS_PORT"),
+        user=master_credential['username'],
+        password=master_credential['password'],
+        database=os.environ.get('RDS_DATABASE_NAME')
+    )
+
+    try:
+        # Create a cursor object to interact with the database
+        cur = conn.cursor()
+
+        # Define the SQL query for insertion (modify this according to your table structure)
+        sql = """
+        INSERT INTO cars_raw_data (
+            listing_id, year, make, model, vin, is_urgent,
+            is_exchangable, pay_with_installments, insert_date,
+            location, price, seller_id, details, options
+        ) VALUES (
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+        )
+        """
+
+        # Execute the query with the data
+        cur.execute(sql, (
+            data["listing_id"], data["car_year"], data["car_make"], data["car_model"],
+            data["car_vin"], data["car_is_urgent"],
+            data["car_is_exchangable"], data["car_pay_with_installments"],
+            data["car_insert_date"], data["car_location"],
+            data["car_price"], data["car_seller_id"],
+            json.dumps(data["car_details"]), data["car_options"]
+        ))
+
+        # Commit the changes
+        conn.commit()
+
+    except Exception as e:
+        # Handle database insertion errors
+        print(f"Error inserting into database: {str(e)}")
+
+    finally:
+        # Close the database connection
+        cur.close()
+        conn.close()
