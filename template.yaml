@@ -158,6 +158,8 @@ Resources:
           RDS_PORT: !GetAtt RDSDatabase.Endpoint.Port
           RDS_DATABASE_NAME: autoam
           RDS_SECRET_ARN: !Ref RDSSecret
+      Layers:
+      - !Ref ScrapperLayer
       Events:
         MySQSEvent:
           Type: SQS
