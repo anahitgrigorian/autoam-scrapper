@@ -158,7 +158,7 @@ def insert_into_database(data):
             location, price, seller_id, details, options
         ) VALUES (
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-        )
+        ) ON CONFLICT (listing_id) DO NOTHING
         """
 
         # Execute the query with the data
