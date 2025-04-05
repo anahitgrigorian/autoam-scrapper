@@ -11,6 +11,8 @@ def lambda_handler(event, context):
 
         if not ip_address:
             raise Exception("AUTOAM_IP_ADDRESS environment variable is not set.")
+        
+        return {"statusCode": 200, "body": json.dumps({"msg": "NOT_IMPLEMENTED"})}
 
         for record in event['Records']:
             listing_url = json.loads(record['body'])
