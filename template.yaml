@@ -219,62 +219,62 @@ Resources:
   #       PasswordLength: 16
   #       ExcludeCharacters: '"@/\'
 
-  # RDSInitLambdaSecurityGroup:
-  #   Type: AWS::EC2::SecurityGroup
-  #   Properties:
-  #     GroupDescription: "DB init Lambda security group"
-  #     VpcId: !Ref VpcId
+  RDSInitLambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "DB init Lambda security group"
+      VpcId: !Ref VpcId
 
-  # RDSInitLambdaRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument: |
-  #       {
-  #         "Statement": [{
-  #           "Action": "sts:AssumeRole",
-  #           "Effect": "Allow",
-  #           "Principal": {
-  #             "Service": "lambda.amazonaws.com"
-  #           }
-  #         }]
-  #       }
-  #     Policies:
-  #       - PolicyName: !Sub RDSInitLambdaFunctionPolicy
-  #         PolicyDocument: |
-  #           {
-  #             "Statement": [
-  #               {
-  #                 "Effect": "Allow",
-  #                 "Action": [
-  #                   "lambda:InvokeFunction",
-  #                   "ec2:*",
-  #                   "logs:*",
-  #                   "secretsmanager:*"
-  #                 ],
-  #                 "Resource": "*"
-  #               }
-  #             ]
-  #           }
+  RDSInitLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: |
+        {
+          "Statement": [{
+            "Action": "sts:AssumeRole",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "lambda.amazonaws.com"
+            }
+          }]
+        }
+      Policies:
+        - PolicyName: !Sub RDSInitLambdaFunctionPolicy
+          PolicyDocument: |
+            {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:InvokeFunction",
+                    "ec2:*",
+                    "logs:*",
+                    "secretsmanager:*"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
 
-  # RDSInitLambdaFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     Role: !GetAtt RDSInitLambdaRole.Arn
-  #     Handler: app.lambda_handler
-  #     Runtime: python3.9
-  #     CodeUri: ./src/init-database/
-  #     Environment:
-  #       Variables:
-  #         RDS_ENDPOINT: !GetAtt RDSDatabase.Endpoint.Address
-  #         RDS_PORT: !GetAtt RDSDatabase.Endpoint.Port
-  #         RDS_DATABASE_NAME: autoam
-  #         RDS_SECRET_ARN: !Ref RDSSecret
-  #     Layers:
-  #     - !Ref ScrapperLayer
-  #     VpcConfig:
-  #       SecurityGroupIds:
-  #         - !Ref RDSInitLambdaSecurityGroup
-  #       SubnetIds: !Ref SubnetIds
+  RDSInitLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Role: !GetAtt RDSInitLambdaRole.Arn
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      CodeUri: ./src/init-database/
+      # Environment:
+      #   Variables:
+          # RDS_ENDPOINT: !GetAtt RDSDatabase.Endpoint.Address
+          # RDS_PORT: !GetAtt RDSDatabase.Endpoint.Port
+          # RDS_DATABASE_NAME: autoam
+          # RDS_SECRET_ARN: !Ref RDSSecret
+      Layers:
+      - !Ref ScrapperLayer
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref RDSInitLambdaSecurityGroup
+        SubnetIds: !Ref SubnetIds
 
   # RDSDatabaseCustomResource:
     # Type: 'Custom::RDSDatabaseResource'
