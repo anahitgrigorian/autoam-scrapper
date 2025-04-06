@@ -15,22 +15,22 @@ States:
         Next: ProcessNewListings
       - Variable: '$.check'
         StringEquals: "not_scrapped"
-        Next: GetPageCount
+        Next: GetPages
 
   ProcessNewListings:
     Type: Task
     Resource: ${ProcessNewListingsArn}
     End: true
 
-  GetPageCount:
+  GetPages:
     Type: Task
-    Resource: ${GetPageCountArn}
-    ResultPath: '$.count'
+    Resource: ${GetPagesArn}
+    ResultPath: '$.pages'
     Next: 'ProcessPages'
 
   ProcessPages:
     Type: Map
-    ItemsPath: '$.count'
+    ItemsPath: '$.pages'
     MaxConcurrency: 10
     Iterator:
       StartAt: 'PageScrapperLambda'

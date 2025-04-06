@@ -29,7 +29,7 @@ Resources:
       DefinitionUri: src/state-machine/orchestrator.yaml
       DefinitionSubstitutions:
         CheckPagesScrappedArn: !GetAtt CheckPagesScrappedFunction.Arn
-        GetPageCountArn: !GetAtt GetPageCountFunction.Arn
+        GetPagesArn: !GetAtt GetPagesFunction.Arn
         PageScrapperArn: !GetAtt PageScrapperFunction.Arn
         ProcessNewListingsArn: !GetAtt ProcessNewListingsFunction.Arn
         SetPagesScrappedArn: !GetAtt SetPagesScrappedFunction.Arn
@@ -37,7 +37,7 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckPagesScrappedFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref GetPageCountFunction
+            FunctionName: !Ref GetPagesFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref PageScrapperFunction
         - LambdaInvokePolicy:
@@ -96,10 +96,10 @@ Resources:
       Layers:
       - !Ref ScrapperLayer
 
-  GetPageCountFunction:
+  GetPagesFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/get-page-count/
+      CodeUri: src/get-pages/
       Handler: app.lambda_handler
       Runtime: python3.9
       Architectures:
