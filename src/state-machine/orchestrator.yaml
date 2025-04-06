@@ -31,14 +31,17 @@ States:
   ProcessPages:
     Type: Map
     ItemsPath: '$.pages'
-    MaxConcurrency: 10
+    ItemSelector:
+      page-list.$: $$.Map.Item.Value
+    MaxConcurrency: 2
     Iterator:
       StartAt: 'PageScrapperLambda'
       States:
         PageScrapperLambda:
           Type: 'Task'
           Resource: ${PageScrapperArn}
-          InputPath: '$.iterator.index'
+          Parameters:
+            page.$: $.page-list
           End: true
     Next: 'SetPagesScrapped'
 
