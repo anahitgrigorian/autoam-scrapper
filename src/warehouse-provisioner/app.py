@@ -90,6 +90,7 @@ def get_data_from_listing(listing_url, ip_address):
             car_vin = soup.select('.pad-left-6')[0].text.strip() if len(soup.select('.pad-left-6')) > 0 else None
             car_is_exchangable = False
             car_pay_with_installments = False
+            car_is_negotiable = False
             car_is_urgent = False
             car_options = soup.select('.ad-options')[0].text.strip() if len(soup.select('.ad-options')) > 0 else None
 
@@ -97,6 +98,9 @@ def get_data_from_listing(listing_url, ip_address):
                 car_is_exchangable = True
             if "installments" in car_pricing_attributes:
                 car_pay_with_installments = True
+            if car_price == "negotiable":
+                car_price = -1
+                car_is_negotiable = True
             if len(soup.select('.urgent-stiker')) > 0:
                 car_is_urgent = True
 
@@ -121,6 +125,7 @@ def get_data_from_listing(listing_url, ip_address):
                 "car_model": car_model,
                 "car_vin": car_vin,
                 "car_is_urgent": car_is_urgent,
+                "car_is_negotiable": car_is_negotiable,
                 "car_is_exchangable": car_is_exchangable,
                 "car_pay_with_installments": car_pay_with_installments,
                 "car_insert_date": datetime.strptime(car_insert_date, "%d.%m.%Y").strftime("%Y-%m-%d"), 
@@ -156,18 +161,18 @@ def insert_into_database(data):
         # Define the SQL query for insertion (modify this according to your table structure)
         sql = """
         INSERT INTO cars_raw_data (
-            listing_id, year, make, model, vin, is_urgent,
+            listing_id, year, make, model, vin, is_negotiable, is_urgent,
             is_exchangable, pay_with_installments, insert_date,
             location, price, seller_id, details, options
         ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         ) ON CONFLICT (listing_id) DO NOTHING
         """
 
         # Execute the query with the data
         cur.execute(sql, (
             data["listing_id"], data["car_year"], data["car_make"], data["car_model"],
-            data["car_vin"], data["car_is_urgent"],
+            data["car_vin"], data["car_is_negotiable"], data["car_is_urgent"],
             data["car_is_exchangable"], data["car_pay_with_installments"],
             data["car_insert_date"], data["car_location"],
             data["car_price"], data["car_seller_id"],
