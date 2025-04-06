@@ -33,7 +33,7 @@ States:
     ItemsPath: '$.pages'
     ItemSelector:
       page-list.$: $$.Map.Item.Value
-    MaxConcurrency: 2
+    MaxConcurrency: 1
     Iterator:
       StartAt: 'PageScrapperLambda'
       States:
