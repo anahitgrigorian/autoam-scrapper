@@ -22,7 +22,7 @@ def lambda_handler(event, context):
         sqs = boto3.client('sqs')
 
         for record in event['Records']:
-            listing_url = json.loads(record['body'])
+            listing_url = record['body']
             data = get_data_from_listing(listing_url, ip_address)
 
             # Insert data into PostgreSQL database
@@ -35,7 +35,7 @@ def lambda_handler(event, context):
             )
 
         # Return the result
-        return {"statusCode": 200, "body": json.dumps({"page_urls": event['Records']})}
+        return {"statusCode": 200, "body": json.dumps({"records": event['Records']})}
     except Exception as e:
         # Handle exceptions and return an error response
         return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
